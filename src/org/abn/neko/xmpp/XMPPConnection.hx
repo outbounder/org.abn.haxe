@@ -23,6 +23,9 @@ class XMPPConnection
 	
 	private var stream:Stream;
 	private var cnx:SocketConnection;
+	private var socketThread:Thread;
+	
+	public var onConnected:Void->Void;
 	
 	
 	public function new(username:String, password:String, server:String, useThread:Bool) 
@@ -35,15 +38,10 @@ class XMPPConnection
 	
 	public function disconnect():Void
 	{
-		trace("disconnecting...");
-		if (this.stream == null && this.cnx == null)
-			return;
-		if (this.stream.status == StreamStatus.open)
-			this.stream.close();
-		if (this.cnx != null)
-			this.cnx.disconnect();		
-		this.stream = null;
-		this.cnx = null;
+		if (this.useThread)
+			this.socketThread.sendMessage("disconnect");
+		else
+			this.disconnectFromServer();
 	}
 	
 	public function connect():Void
@@ -52,14 +50,14 @@ class XMPPConnection
 			return;
 			
 		if (this.useThread)
-			Thread.create(this.connectToServer);
+			this.socketThread = Thread.create(this.connectToServer);
 		else
 			this.connectToServer();
 	}
 	
 	public function addMessageListener(handler:Dynamic->Void)
 	{
-		if (this.stream.status != StreamStatus.open)
+		if (this.stream == null)
 			throw "not connected";
 			
 		var filters = new Array<PacketFilter>();
@@ -75,14 +73,32 @@ class XMPPConnection
 		this.stream.sendMessage(recipientJID, message);
 	}
 	
-	private function connectToServer()
+	private function disconnectFromServer():Void
+	{
+		trace("disconnecting...");
+		if (this.stream == null && this.cnx == null)
+			return;
+		if (this.stream.status == StreamStatus.open)
+			this.stream.close();
+		if (this.cnx != null)
+			this.cnx.disconnect();		
+		this.stream = null;
+		this.cnx = null;
+		trace("disconnected");
+	}
+	
+	private function connectToServer():Void
 	{
 		trace("connecting...");
+		
 		this.cnx = new jabber.SocketConnection( this.server, Stream.defaultPort );
 		this.stream = new Stream( new jabber.JID( this.username+"@"+this.server ), cnx );
 		this.stream.onOpen = this.handleOpen;
 		this.stream.onClose = this.handleClose;
 		this.stream.open();
+		
+		var msg:String = Thread.readMessage(true); // waiting for one message to disconnect
+		this.disconnectFromServer();
 	}
 
 	private function handleClose(?e:Dynamic):Void
@@ -113,6 +129,8 @@ class XMPPConnection
 	{
 		trace("connected");
 		stream.sendPresence(PresenceShow.chat);
+		if(this.onConnected != null)
+			this.onConnected();
 	}
 	
 }

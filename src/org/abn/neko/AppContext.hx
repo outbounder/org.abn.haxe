@@ -7,8 +7,6 @@ import org.abn.neko.xmpp.XMPPContext;
 
 class AppContext 
 {
-	private var xmppContext:XMPPContext;
-	
 	public function new()
 	{
 		
@@ -21,12 +19,6 @@ class AppContext
 	
 	public function createXMPPContext(username:String, password:String, server:String):XMPPContext
 	{
-		this.xmppContext = new XMPPContext(username, password, server, this);
-		return this.xmppContext;
-	}
-	
-	public function getXMPPContext():XMPPContext
-	{
-		return this.xmppContext;
+		return new XMPPContext(username, password, server, this);
 	}
 }

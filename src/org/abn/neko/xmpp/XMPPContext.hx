@@ -15,18 +15,18 @@ class XMPPContext extends AppContext
 	public function new(username:String, password:String, server:String, appContext:AppContext)
 	{
 		super();
-		this.xmppContext = appContext.xmppContext;
 		
 		this.username = username;
 		this.password = password;
 		this.server = server;
 	}
 	
-	public function openConnection(?useThread:Bool = true):Bool
+	public function openConnection(?useThread:Bool = true, ?onConnected:Void->Void):Bool
 	{
 		if (this.connection == null)
 		{
 			this.connection = new XMPPConnection(this.username, this.password, this.server, useThread);
+			this.connection.onConnected = onConnected;
 			this.connection.connect();
 			return true;
 		}

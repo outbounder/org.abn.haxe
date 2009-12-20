@@ -8,7 +8,6 @@ class HTTPContext extends AppContext
 	public function new(params:Hash<String>,method:String, context:AppContext)
 	{
 		super();
-		this.xmppContext = context.xmppContext;
 		this.httpRequest = new HTTPRequest(params, method, this);
 	}
 	
