@@ -26,6 +26,7 @@ class XMPPConnection
 	private var socketThread:Thread;
 	
 	public var onConnected:Void->Void;
+	public var onDisconnected:Void->Void;
 	
 	
 	public function new(username:String, password:String, server:String, useThread:Bool) 
@@ -88,6 +89,9 @@ class XMPPConnection
 		this.stream = null;
 		this.cnx = null;
 		trace("disconnected");
+		
+		if(this.onDisconnected != null)
+			this.onDisconnected();
 	}
 	
 	private function connectToServer():Void

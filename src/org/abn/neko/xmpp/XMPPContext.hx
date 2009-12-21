@@ -21,12 +21,13 @@ class XMPPContext extends AppContext
 		this.server = this.get(id + ".server");
 	}
 	
-	public function openConnection(?useThread:Bool = true, ?onConnected:Void->Void):Bool
+	public function openConnection(?useThread:Bool = true, ?onConnected:Void->Void, ?onDisconnect:Void->Void):Bool
 	{
 		if (this.connection == null)
 		{
 			this.connection = new XMPPConnection(this.username, this.password, this.server, useThread);
 			this.connection.onConnected = onConnected;
+			this.connection.onDisconnected = onDisconnect;
 			this.connection.connect();
 			return true;
 		}
