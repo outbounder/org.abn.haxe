@@ -12,13 +12,13 @@ class XMPPContext extends AppContext
 	
 	private var connection:XMPPConnection;
 	
-	public function new(username:String, password:String, server:String, appContext:AppContext)
+	public function new(id:String, properties:Hash<Dynamic>)
 	{
-		super();
+		super(properties);
 		
-		this.username = username;
-		this.password = password;
-		this.server = server;
+		this.username = this.get(id + ".username");
+		this.password = this.get(id + ".password");
+		this.server = this.get(id + ".server");
 	}
 	
 	public function openConnection(?useThread:Bool = true, ?onConnected:Void->Void):Bool
@@ -38,11 +38,6 @@ class XMPPContext extends AppContext
 	{
 		if(this.connection != null)
 			this.connection.disconnect();
-	}
-	
-	public function createChatContext(recipientJID:String):ChatContext
-	{
-		return new ChatContext(recipientJID, this);
 	}
 	
 	public function getConnection():XMPPConnection

@@ -38,9 +38,12 @@ class XMPPConnection
 	
 	public function disconnect():Void
 	{
-		if (this.useThread)
+		if (this.stream == null)
+			return;
+			
+		/* if (this.useThread)
 			this.socketThread.sendMessage("disconnect");
-		else
+		else */
 			this.disconnectFromServer();
 	}
 	
@@ -98,6 +101,7 @@ class XMPPConnection
 		this.stream.open();
 		
 		var msg:String = Thread.readMessage(true); // waiting for one message to disconnect
+		trace("disconnecting / exit from thread");
 		this.disconnectFromServer();
 	}
 

@@ -2,23 +2,25 @@
 
 import neko.Lib;
 import neko.Web;
-import org.abn.neko.http.HTTPContext;
+import org.abn.Context;
+import org.abn.ContextParser;
+import org.abn.neko.database.mysql.MySqlContext;
 import org.abn.neko.xmpp.XMPPContext;
 
-class AppContext 
-{
-	public function new()
+class AppContext extends Context
+{	
+	public function new(properies:Hash<Dynamic>)
 	{
-		
+		super(properies);
 	}
 	
-	public function createHTTPContext():HTTPContext
+	public function createDatabaseContext(id:String):MySqlContext
 	{
-		return new HTTPContext(Web.getParams(), Web.getMethod(), this);
+		return new MySqlContext(id, this.properties);
 	}
 	
-	public function createXMPPContext(username:String, password:String, server:String):XMPPContext
+	public function createXMPPContext(id:String):XMPPContext
 	{
-		return new XMPPContext(username, password, server, this);
+		return new XMPPContext(id, this.properties);
 	}
 }
