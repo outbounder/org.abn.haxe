@@ -42,10 +42,7 @@ class XMPPConnection
 		if (this.stream == null)
 			return;
 			
-		/* if (this.useThread)
-			this.socketThread.sendMessage("disconnect");
-		else */
-			this.disconnectFromServer();
+		this.disconnectFromServer();
 	}
 	
 	public function connect():Void

@@ -13,6 +13,7 @@ class MySqlContext extends AppContext
 	public var database:String;
 	public var user:String;
 	public var pass:String;
+	public var socket:String;
 	
 	private var connection:Connection;
 	
@@ -24,8 +25,9 @@ class MySqlContext extends AppContext
 		this.database = this.get(id + ".database");
 		this.user = this.get(id + ".username");
 		this.pass = this.get(id + ".password");
+		this.socket = this.get(id + ".socket");
 		
-		this.connection  = neko.db.Mysql.connect({user: this.user, socket: null, port: 3306, pass: this.pass, host: this.host, database: this.database});
+		this.connection  = neko.db.Mysql.connect({user: this.user, socket: this.socket, port: 3306, pass: this.pass, host: this.host, database: this.database});
 	}
 	
 	public function close()
