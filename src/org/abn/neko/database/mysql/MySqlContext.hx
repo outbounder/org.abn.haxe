@@ -26,13 +26,21 @@ class MySqlContext extends AppContext
 		this.user = this.get(id + ".username");
 		this.pass = this.get(id + ".password");
 		this.socket = this.get(id + ".socket");
-		
+	}
+	
+	public function connect():Void
+	{
+		if (this.connection != null)
+			return;
+			
 		this.connection  = neko.db.Mysql.connect({user: this.user, socket: this.socket, port: 3306, pass: this.pass, host: this.host, database: this.database});
 	}
 	
-	public function close()
+	public function close():Void
 	{
-		this.connection.close();
+		if(this.connection != null)
+			this.connection.close();
+		this.connection = null;
 	}
 	
 	public function getConnection():Connection

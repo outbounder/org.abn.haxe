@@ -65,7 +65,7 @@ class ManagerEx <T : Object>  extends neko.db.Manager <T>
 			var found:Bool = false;
 			for(tf in currentTableColumns)
 			{
-				if (tf == f)
+				if (tf.toLowerCase() == f.toLowerCase())
 					found = true;
 			}
 			if (found)

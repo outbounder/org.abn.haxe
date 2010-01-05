@@ -41,20 +41,28 @@ class BotContext extends AppContext
 	
 	public function getDatabase():MySqlContext
 	{
-		if (!this.has("database"))
-		{
-			var dbContext:MySqlContext = this.createDatabaseContext("database");
-			this.set("database", dbContext);
-			neko.db.Manager.cnx = dbContext.getConnection();
-			neko.db.Manager.initialize();
-		}
 		return this.get("database");
 	}
 	
-	public function resetDatabase():Void
+	public function openDatabase():Void
 	{
-		this.set("database", null);
+		if (this.has("database"))
+			return;
+		var dbContext:MySqlContext = this.createDatabaseContext("database");
+		this.set("database", dbContext);
+		dbContext.connect();
+		neko.db.Manager.cnx = dbContext.getConnection();
+		neko.db.Manager.initialize();
+	}
+	
+	public function closeDatabase():Void
+	{
+		if (!this.has("database"))
+			return;
+		var dbContext:MySqlContext = this.get("database");
+		dbContext.close();
 		neko.db.Manager.cleanup();
+		this.set("database", null);
 	}
 	
 	public function getOperationFactory():BotOperationFactory
