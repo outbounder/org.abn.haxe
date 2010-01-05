@@ -44,7 +44,6 @@ class BotOperationListener
 					}
 					
 					var result:String = operation.execute(this.botContext.getOperationFactory().getOperationParamsFromXML(fast));
-					result = result.split("<").join("&lt;").split(">").join("&gt;");
 					this.botContext.getXMPPContext().getConnection().sendMessage(msg.from, result);
 				}
 			}

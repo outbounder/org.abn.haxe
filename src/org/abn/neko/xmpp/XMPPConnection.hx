@@ -1,4 +1,5 @@
 ﻿package org.abn.neko.xmpp;
+import jabber.client.Roster;
 import jabber.MessageListener;
 import jabber.Ping;
 import jabber.Pong;
@@ -33,6 +34,8 @@ class XMPPConnection
 	public var onDisconnected:Void->Void;
 	public var onConnectFailed:Dynamic->Void;
 	
+	
+	private var serverPing:Ping;
 	
 	public function new(username:String, password:String, server:String, useThread:Bool) 
 	{
@@ -70,48 +73,30 @@ class XMPPConnection
 		return listener;
 	}
 	
-	public function createPongHandler():Pong
-	{
-		if (this.stream == null)
-			throw "not connected";
-			
-		var p:Pong = new Pong(this.stream);
-		return p;
-	}
-	
-	public function createPing(?recipientJID:String, ?pongHandler:Dynamic->Void, ?interval):Ping
-	{
-		var p:Ping = new Ping(this.stream, recipientJID, interval);
-		
-		if(interval == null)
-			p.send();
-		else
-			p.start();
-			
-		p.onError = pongHandler;
-		p.onResponse = pongHandler;
-		p.onTimeout = pongHandler;
-		return p;
-	}
-
 	public function sendMessage(recipientJID:String, message:String):Void
 	{
 		if (this.stream.status != StreamStatus.open)
 			throw "not connected";
 			
-		this.stream.sendMessage(recipientJID, message);
+		this.stream.sendMessage(recipientJID, message.split("<").join("&lt;").split(">").join("&gt;"));
 	}
 	
 	private function disconnectFromServer():Void
 	{
 		if (this.stream == null && this.cnx == null)
 			return;
+			
+		if (this.serverPing != null)
+			this.serverPing.stop();
+			
 		if (this.stream.status == StreamStatus.open)
 			this.stream.close();
 		if (this.cnx != null)
 			this.cnx.disconnect();		
+		
 		this.stream = null;
 		this.cnx = null;
+		this.serverPing = null;
 		
 		if(this.onDisconnected != null)
 			this.onDisconnected();
@@ -120,7 +105,7 @@ class XMPPConnection
 	private function connectToServer():Void
 	{	
 		this.cnx = new jabber.SocketConnection( this.server, Stream.defaultPort );
-		this.stream = new Stream( new jabber.JID( this.username+"@"+this.server+"/abn" ), cnx );
+		this.stream = new Stream( new jabber.JID( this.username+"@"+this.server ), cnx );
 		this.stream.onOpen = this.handleOpen;
 		this.stream.onClose = this.handleClose;
 		this.stream.open();
@@ -156,6 +141,9 @@ class XMPPConnection
 	private function handleLogin():Void
 	{
 		stream.sendPresence(PresenceShow.chat);
+		
+		this.serverPing = new Ping(this.stream, null, 60000);
+		this.serverPing.start();
 		
 		if(this.onConnected != null)
 			this.onConnected();
