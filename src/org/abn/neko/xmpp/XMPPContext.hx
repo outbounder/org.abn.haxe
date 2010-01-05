@@ -81,7 +81,7 @@ class XMPPContext extends AppContext
 		{
 			var responseHandler:String->String->Void = this.chats.get(jid);
 			responseHandler(jid, msg.body.split("&lt;").join("<").split("&gt;").join(">"));
-			this.chats.remove(msg.from);
+			this.chats.remove(jid);
 		}
 		else
 		if (this.onIncomingMessage != null)
