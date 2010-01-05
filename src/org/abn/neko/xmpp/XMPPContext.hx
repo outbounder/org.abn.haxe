@@ -1,5 +1,6 @@
 package org.abn.neko.xmpp;
 
+import jabber.JIDUtil;
 import jabber.MessageListener;
 import neko.vm.Thread;
 import org.abn.neko.AppContext;
@@ -19,7 +20,7 @@ class XMPPContext extends AppContext
 	private var onConnected:Void->Void;
 	private var onDisconnected:Void->Void;
 
-	private var chats:Hash<String->Void>;
+	private var chats:Hash<String->String->Void>;
 	
 	public function new(id:String, properties:Hash<Dynamic>)
 	{
@@ -75,22 +76,25 @@ class XMPPContext extends AppContext
 	
 	private function messageHandler(msg:Message):Void
 	{
-		if (this.chats.exists(msg.from))
+		var jid:String = JIDUtil.parseBare(msg.from);
+		if (this.chats.exists(jid))
 		{
-			var responseHandler:String->Void = this.chats.get(msg.from);
-			responseHandler(msg.body);
+			var responseHandler:String->String->Void = this.chats.get(jid);
+			responseHandler(jid, msg.body.split("&lt;").join("<").split("&gt;").join(">"));
 			this.chats.remove(msg.from);
 		}
 		else
 		if (this.onIncomingMessage != null)
+		{
 			this.onIncomingMessage(msg.from, msg.body.split("&lt;").join("<").split("&gt;").join(">"));
+		}
 	}
 	
-	public function sendMessage(recipientJID:String, message:String, ?responseHandler:String->Void = null):Void
+	public function sendMessage(recipientJID:String, message:String, ?responseHandler:String->String->Void = null):Void
 	{
 		if(responseHandler != null)
 			this.chats.set(recipientJID, responseHandler);
 			
-		this.connection.sendMessage(recipientJID, message.split("<").join("&lt;").split(">").join("&gt;")));
+		this.connection.sendMessage(recipientJID, message.split("<").join("&lt;").split(">").join("&gt;"));
 	}
 }

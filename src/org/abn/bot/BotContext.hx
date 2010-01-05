@@ -19,12 +19,12 @@ class BotContext extends AppContext
 		return this.get("xmpp");
 	}
 	
-	public function openXMPPConnection():Void
+	public function openXMPPConnection(onConnected:Void->Void, onConnectFailed:Dynamic->Void, onDisconnected:Void->Void):Void
 	{
 		if (!this.has("xmpp"))
 			this.set("xmpp", this.createXMPPContext("xmpp"));
 			
-		this.getXMPPContext().openConnection(onConnected, onDisconnected, onConnectionFailed, onIncomingMessage);
+		this.getXMPPContext().openConnection(onConnected, onDisconnected, onConnectFailed, onIncomingMessage);
 	}
 	
 	public function closeXMPPConnection()
