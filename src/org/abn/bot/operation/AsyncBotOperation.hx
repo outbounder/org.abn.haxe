@@ -6,15 +6,15 @@ import xmpp.Message;
 
 class AsyncBotOperation 
 {
-	private var xml:Xml;
-	private var msg:Message;
+	private var from:String;
+	private var msg:String;
 	private var botContext:BotContext;
 	
-	public function new(botContext:BotContext, msg:Message, xml:Xml) 
+	public function new(botContext:BotContext, from:String, msg:String) 
 	{
 		this.botContext = botContext;
 		this.msg = msg;
-		this.xml = xml;
+		this.from = from;
 	}
 	
 	public function handle():Void
@@ -24,11 +24,12 @@ class AsyncBotOperation
 	
 	private function handleSafe():Void
 	{
+		var xml:Xml = Xml.parse(this.msg);
 		var fast:Fast = new Fast(xml.firstElement());
-					
+
 		var result:String = this.botContext.executeOperation(fast.name, 
 									this.botContext.getOperationFactory().getOperationParamsFromXML(fast));
-		this.botContext.getXMPPContext().getConnection().sendMessage(msg.from, result);
+		this.botContext.getXMPPContext().sendMessage(this.from, result);
 	}
 	
 }

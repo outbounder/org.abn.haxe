@@ -1,5 +1,6 @@
 ﻿package org.abn.bot;
 
+import org.abn.bot.operation.AsyncBotOperation;
 import org.abn.bot.operation.BotOperation;
 import org.abn.bot.operation.BotOperationFactory;
 import org.abn.neko.AppContext;
@@ -15,16 +16,27 @@ class BotContext extends AppContext
 	
 	public function getXMPPContext():XMPPContext
 	{
+		return this.get("xmpp");
+	}
+	
+	public function openXMPPConnection():Void
+	{
 		if (!this.has("xmpp"))
 			this.set("xmpp", this.createXMPPContext("xmpp"));
 			
-		return this.get("xmpp");
+		this.getXMPPContext().openConnection(onConnected, onDisconnected, onConnectionFailed, onIncomingMessage);
 	}
 	
 	public function closeXMPPConnection()
 	{
 		this.getXMPPContext().closeConnection();
 		this.set("xmpp", null);
+	}
+	
+	private function onIncomingMessage(from:String, msg:String):Void
+	{
+		var asynchBotOperation:AsyncBotOperation = new AsyncBotOperation(this, from, msg);
+		asynchBotOperation.handle();
 	}
 	
 	public function getDatabase():MySqlContext

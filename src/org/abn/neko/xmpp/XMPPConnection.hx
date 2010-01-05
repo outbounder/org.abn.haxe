@@ -24,7 +24,6 @@ class XMPPConnection
 	private var username:String;
 	private var password:String;
 	private var server:String;
-	private var useThread:Bool;
 	
 	private var stream:Stream;
 	private var cnx:SocketConnection;
@@ -34,23 +33,18 @@ class XMPPConnection
 	public var onDisconnected:Void->Void;
 	public var onConnectFailed:Dynamic->Void;
 	
-	
 	private var serverPing:Ping;
 	
-	public function new(username:String, password:String, server:String, useThread:Bool) 
+	public function new(username:String, password:String, server:String) 
 	{
 		this.username = username;
 		this.password = password;
 		this.server = server;
-		this.useThread = useThread;
 	}
 	
-	public function disconnect():Void
+	public function getStream():Stream
 	{
-		if (this.stream == null)
-			return;
-			
-		this.disconnectFromServer();
+		return this.stream;
 	}
 	
 	public function connect():Void
@@ -58,48 +52,7 @@ class XMPPConnection
 		if (this.stream != null)
 			return;
 			
-		if (this.useThread)
-			this.socketThread = Thread.create(this.connectToServer);
-		else
-			this.connectToServer();
-	}
-	
-	public function createMessageListener(handler:Message->Void, ?listen:Bool):MessageListener
-	{
-		if (this.stream == null)
-			throw "not connected";
-			
-		var listener:MessageListener = new MessageListener(this.stream, handler, listen);
-		return listener;
-	}
-	
-	public function sendMessage(recipientJID:String, message:String):Void
-	{
-		if (this.stream.status != StreamStatus.open)
-			throw "not connected";
-			
-		this.stream.sendMessage(recipientJID, message.split("<").join("&lt;").split(">").join("&gt;"));
-	}
-	
-	private function disconnectFromServer():Void
-	{
-		if (this.stream == null && this.cnx == null)
-			return;
-			
-		if (this.serverPing != null)
-			this.serverPing.stop();
-			
-		if (this.stream.status == StreamStatus.open)
-			this.stream.close();
-		if (this.cnx != null)
-			this.cnx.disconnect();		
-		
-		this.stream = null;
-		this.cnx = null;
-		this.serverPing = null;
-		
-		if(this.onDisconnected != null)
-			this.onDisconnected();
+		this.socketThread = Thread.create(this.connectToServer);
 	}
 	
 	private function connectToServer():Void
@@ -110,10 +63,39 @@ class XMPPConnection
 		this.stream.onClose = this.handleClose;
 		this.stream.open();
 		
-		var msg:String = Thread.readMessage(true); // waiting for one message to disconnect
-		this.disconnectFromServer();
+		// removed thread.readMessage
 	}
-
+	
+	public function disconnect():Void
+	{
+		if (this.stream == null && this.cnx == null)
+			return;
+						
+		if (this.stream.status == StreamStatus.open)
+			this.stream.close();
+			
+		if (this.serverPing != null)
+			this.serverPing.stop();
+			
+		if (this.cnx != null)
+			this.cnx.disconnect();		
+		
+		this.stream = null;
+		this.cnx = null;
+		this.serverPing = null;
+		
+		if(this.onDisconnected != null)
+			this.onDisconnected();
+	}
+		
+	public function sendMessage(recipientJID:String, message:String):Void
+	{
+		if (this.stream.status != StreamStatus.open)
+			throw "not connected";
+			
+		this.stream.sendMessage(recipientJID, message);
+	}
+	
 	private function handleClose(?e:Dynamic):Void
 	{
 		this.disconnect();
