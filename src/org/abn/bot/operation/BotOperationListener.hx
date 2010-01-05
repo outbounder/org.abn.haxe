@@ -1,6 +1,7 @@
 ﻿package org.abn.bot.operation;
 import haxe.xml.Fast;
 import jabber.MessageListener;
+import neko.vm.Thread;
 import org.abn.bot.BotContext;
 import org.abn.neko.AppContext;
 import org.abn.neko.xmpp.XMPPContext;
@@ -18,15 +19,26 @@ class BotOperationListener
 		this.messageListener = this.botContext.getXMPPContext().getConnection().createMessageListener(incomingMessagesHandler, true);
 	}
 	
+	public function getListening():Bool
+	{
+		return this.messageListener.listen;
+	}
+	
 	public function stopListening():Void
 	{
 		this.messageListener.listen = false;
+	}
+	
+	public function startListening():Void
+	{
+		this.messageListener.listen = true;
 	}
 	
 	private function incomingMessagesHandler(msg:Message):Void
 	{
 		try
 		{
+			trace(msg.body);
 			if (msg.body != null)
 			{
 				var body:String = msg.body.split("&lt;").join("<").split("&gt;").join(">");
@@ -34,17 +46,8 @@ class BotOperationListener
 				
 				if (xml != null)
 				{
-					var fast:Fast = new Fast(xml.firstElement());
-												
-					var operation:BotOperation = this.botContext.getOperationFactory().getOperationById(fast.name);
-					if (operation == null)
-					{
-						this.botContext.getXMPPContext().getConnection().sendMessage(msg.from, msg.body);
-						return;
-					}
-					
-					var result:String = operation.execute(this.botContext.getOperationFactory().getOperationParamsFromXML(fast));
-					this.botContext.getXMPPContext().getConnection().sendMessage(msg.from, result);
+					var asynchBotOperation:AsyncBotOperation = new AsyncBotOperation(this.botContext, msg, xml);
+					asynchBotOperation.handle();
 				}
 			}
 		}
