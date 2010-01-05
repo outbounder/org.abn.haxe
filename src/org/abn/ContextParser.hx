@@ -28,7 +28,7 @@ class ContextParser
 	public function getContext(fast:Fast):Context
 	{
 		this.currentChain = "";
-		var properties:Hash<String> = new Hash();
+		var properties:Hash<Dynamic> = new Hash();
 		for (item in fast.elements)
 		{
 			this.pushItem(properties, item);
@@ -36,7 +36,7 @@ class ContextParser
 		return new Context(properties);
 	}
 	
-	private function pushItem(properties:Hash<String>, item:Fast):Void
+	private function pushItem(properties:Hash<Dynamic>, item:Fast):Void
 	{
 		var original:String = this.currentChain;
 		
@@ -56,7 +56,26 @@ class ContextParser
 			}
 			else
 			{
-				properties.set(this.currentChain + "." + elem.name, elem.innerData);
+				if (!properties.exists(this.currentChain + "." + elem.name))
+				{
+					properties.set(this.currentChain + "." + elem.name, elem.innerData);
+				}
+				else 
+				{
+					var property:Dynamic = properties.get(this.currentChain + "." + elem.name);
+					if (Std.is(property, List))
+					{
+						var pl:List<Dynamic> = property;
+						pl.add(elem.innerData);
+					}
+					else
+					{
+						var pl:List<Dynamic> = new List();
+						pl.add(properties.get(this.currentChain + "." + elem.name));
+						pl.add(elem.innerData);
+						properties.set(this.currentChain + "." + elem.name, pl);
+					}
+				}
 			}
 		}
 		

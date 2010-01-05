@@ -31,6 +31,7 @@ class XMPPConnection
 	
 	public var onConnected:Void->Void;
 	public var onDisconnected:Void->Void;
+	public var onConnectFailed:Dynamic->Void;
 	
 	
 	public function new(username:String, password:String, server:String, useThread:Bool) 
@@ -78,10 +79,15 @@ class XMPPConnection
 		return p;
 	}
 	
-	public function createPing(recipientJID:String, pongHandler:Dynamic->Void):Ping
+	public function createPing(?recipientJID:String, ?pongHandler:Dynamic->Void, ?interval):Ping
 	{
-		var p:Ping = new Ping(this.stream, recipientJID);
-		p.send();
+		var p:Ping = new Ping(this.stream, recipientJID, interval);
+		
+		if(interval == null)
+			p.send();
+		else
+			p.start();
+			
 		p.onError = pongHandler;
 		p.onResponse = pongHandler;
 		p.onTimeout = pongHandler;
@@ -98,7 +104,6 @@ class XMPPConnection
 	
 	private function disconnectFromServer():Void
 	{
-		trace("disconnecting...");
 		if (this.stream == null && this.cnx == null)
 			return;
 		if (this.stream.status == StreamStatus.open)
@@ -107,36 +112,30 @@ class XMPPConnection
 			this.cnx.disconnect();		
 		this.stream = null;
 		this.cnx = null;
-		trace("disconnected");
 		
 		if(this.onDisconnected != null)
 			this.onDisconnected();
 	}
 	
 	private function connectToServer():Void
-	{
-		trace("connecting...");
-		
+	{	
 		this.cnx = new jabber.SocketConnection( this.server, Stream.defaultPort );
-		this.stream = new Stream( new jabber.JID( this.username+"@"+this.server ), cnx );
+		this.stream = new Stream( new jabber.JID( this.username+"@"+this.server+"/abn" ), cnx );
 		this.stream.onOpen = this.handleOpen;
 		this.stream.onClose = this.handleClose;
 		this.stream.open();
 		
 		var msg:String = Thread.readMessage(true); // waiting for one message to disconnect
-		trace("disconnecting / exit from thread");
 		this.disconnectFromServer();
 	}
 
 	private function handleClose(?e:Dynamic):Void
 	{
-		trace("handle close...");
 		this.disconnect();
 	}
 	
 	private function handleOpen():Void
 	{
-		trace("handle open...");
 		var mechanisms = new Array<net.sasl.Mechanism>();
 		mechanisms.push( new net.sasl.PlainMechanism() );
 		
@@ -148,14 +147,16 @@ class XMPPConnection
 	
 	private function handleFail(?e:Dynamic):Void
 	{
-		trace("handle faile "+e);
+		if(this.onConnectFailed != null)
+			this.onConnectFailed(e);
+			
 		this.disconnect();
 	}
 	
 	private function handleLogin():Void
 	{
-		trace("connected");
 		stream.sendPresence(PresenceShow.chat);
+		
 		if(this.onConnected != null)
 			this.onConnected();
 	}

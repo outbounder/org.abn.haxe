@@ -21,7 +21,7 @@ class XMPPContext extends AppContext
 		this.server = this.get(id + ".server");
 	}
 	
-	public function openConnection(?useThread:Bool = true, ?onConnected:Void->Void, ?onDisconnect:Void->Void):Void
+	public function openConnection(?useThread:Bool = true, ?onConnected:Void->Void, ?onDisconnect:Void->Void, ?onConnectFailed:Dynamic->Void):Void
 	{
 		if (this.connection != null)
 			this.connection.disconnect();
@@ -29,6 +29,7 @@ class XMPPContext extends AppContext
 		this.connection = new XMPPConnection(this.username, this.password, this.server, useThread);
 		this.connection.onConnected = onConnected;
 		this.connection.onDisconnected = onDisconnect;
+		this.connection.onConnectFailed = onConnectFailed;
 		this.connection.connect();
 	}
 	
