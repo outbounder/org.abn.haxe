@@ -1,6 +1,10 @@
 ﻿package org.abn.neko.xmpp;
+import jabber.MessageListener;
+import jabber.Ping;
+import jabber.Pong;
 import jabber.StreamStatus;
 import neko.vm.Thread;
+import xmpp.Message;
 
 import xmpp.filter.MessageFilter;
 import xmpp.PacketFilter;
@@ -56,16 +60,34 @@ class XMPPConnection
 			this.connectToServer();
 	}
 	
-	public function addMessageListener(handler:Dynamic->Void)
+	public function createMessageListener(handler:Message->Void, ?listen:Bool):MessageListener
 	{
 		if (this.stream == null)
 			throw "not connected";
 			
-		var filters = new Array<PacketFilter>();
-		filters.push(new MessageFilter());
-		this.stream.addCollector( new PacketCollector( filters, handler, true, null, false) );
+		var listener:MessageListener = new MessageListener(this.stream, handler, listen);
+		return listener;
 	}
 	
+	public function createPongHandler():Pong
+	{
+		if (this.stream == null)
+			throw "not connected";
+			
+		var p:Pong = new Pong(this.stream);
+		return p;
+	}
+	
+	public function createPing(recipientJID:String, pongHandler:Dynamic->Void):Ping
+	{
+		var p:Ping = new Ping(this.stream, recipientJID);
+		p.send();
+		p.onError = pongHandler;
+		p.onResponse = pongHandler;
+		p.onTimeout = pongHandler;
+		return p;
+	}
+
 	public function sendMessage(recipientJID:String, message:String):Void
 	{
 		if (this.stream.status != StreamStatus.open)
@@ -124,13 +146,13 @@ class XMPPConnection
 		auth.authenticate( this.password );
 	}
 	
-	private function handleFail(?e:Dynamic)
+	private function handleFail(?e:Dynamic):Void
 	{
 		trace("handle faile "+e);
 		this.disconnect();
 	}
 	
-	private function handleLogin() 
+	private function handleLogin():Void
 	{
 		trace("connected");
 		stream.sendPresence(PresenceShow.chat);
