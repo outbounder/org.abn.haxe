@@ -92,6 +92,9 @@ class XMPPContext extends AppContext
 	
 	public function sendMessage(recipientJID:String, message:String, ?responseHandler:String->String->Void = null):Void
 	{
+		if (this.chats.exists(recipientJID))
+			throw "can not send message twice to JID without the response had not been recieved";
+			
 		if(responseHandler != null)
 			this.chats.set(recipientJID, responseHandler);
 			
