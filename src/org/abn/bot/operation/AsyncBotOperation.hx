@@ -24,12 +24,19 @@ class AsyncBotOperation
 	
 	private function handleSafe():Void
 	{
-		var xml:Xml = Xml.parse(this.msg);
-		var fast:Fast = new Fast(xml.firstElement());
+		try
+		{
+			var xml:Xml = Xml.parse(this.msg);
+			var fast:Fast = new Fast(xml.firstElement());
 
-		var result:String = this.botContext.executeOperation(fast.name, 
-									this.botContext.getOperationFactory().getOperationParamsFromXML(fast));
-		this.botContext.getXMPPContext().sendMessage(this.from, result);
+			var result:String = this.botContext.executeOperation(fast.name, 
+										this.botContext.getOperationFactory().getOperationParamsFromXML(fast));
+			this.botContext.getXMPPContext().sendMessage(this.from, result);
+		}
+		catch (e:Dynamic)
+		{
+			trace(e);
+		}
 	}
 	
 }
