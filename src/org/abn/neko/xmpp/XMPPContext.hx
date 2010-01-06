@@ -76,6 +76,9 @@ class XMPPContext extends AppContext
 	
 	private function messageHandler(msg:Message):Void
 	{
+		if (msg.body == null)
+			return;
+			
 		var jid:String = JIDUtil.parseBare(msg.from);
 		if (this.chats.exists(jid))
 		{
