@@ -17,6 +17,24 @@ class ManagerEx <T : Object>  extends neko.db.Manager <T>
 		this.classOriginal = classval;
 	}
 	
+	// -------------- FIXES ------------------------------
+	override function doDelete( x : T ) 
+	{
+		var s = new StringBuf();
+		s.add("DELETE FROM ");
+		s.add(table_name);
+		s.add(" WHERE ");
+		addKeys(s,x);
+		execute(s.toString());
+		removeFromCache(x);
+	}
+	
+	function removeFromCache( x : T ) 
+	{
+		neko.db.Manager.object_cache.remove(makeCacheKey(x));
+	}
+	// ----------------------------------------------------
+	
 	public function updateTable():Void
 	{
 		var query:String = "SHOW TABLES LIKE '" + this.table_name + "'";
