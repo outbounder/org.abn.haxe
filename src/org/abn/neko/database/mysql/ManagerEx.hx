@@ -1,5 +1,6 @@
 ﻿package org.abn.neko.database.mysql;
 
+import haxe.xml.Fast;
 import Reflect;
 import neko.db.Object;
 import neko.db.ResultSet;
@@ -7,10 +8,13 @@ import Type;
 
 class ManagerEx <T : Object>  extends neko.db.Manager <T>
 {
-
+    private var classOriginal:Class<Object>;
+	private var classInfo:Fast;
+	
 	public function new(classval : Class<neko.db.Object>) 
 	{
 		super(classval);
+		this.classOriginal = classval;
 	}
 	
 	public function updateTable():Void
@@ -84,15 +88,31 @@ class ManagerEx <T : Object>  extends neko.db.Manager <T>
 	
 	private function getMysqlFieldType(f:String):String
 	{
-		var proto : { local_manager : ManagerEx<T> } = this.class_proto.prototype;
-		var valType:ValueType = Type.typeof(Reflect.field(proto, f)); // TODO check this out, it returns always TNull, which will break the logic
+		var valType:String = this.getFieldType(f);
 		switch(valType)
 		{
-			case ValueType.TInt: return "INT";
-			case ValueType.TFloat: return "FLOAT";
-			case ValueType.TBool: return "BOOL";
+			case "Int": return "INT";
+			case "Float": return "FLOAT";
+			case "Bool": return "BOOL";
+			case "Date": return "DATETIME";
 			default: return "TEXT";
 		}
+	}
+	
+	
+	private function getFieldType(f:String):String
+	{
+		if (this.classInfo == null)
+		{
+			var xml:Xml = Xml.parse(untyped this.classOriginal.__rtti);
+			this.classInfo = new Fast(xml.firstElement());
+		}
+		
+		var fieldInfo:Fast = this.classInfo.node.resolve(f);
+		if (!fieldInfo.hasNode.c)
+			return null;
+		var c:Fast = fieldInfo.node.c;
+		return c.att.path;
 	}
 	
 	private function getTableColumns():List<String>
