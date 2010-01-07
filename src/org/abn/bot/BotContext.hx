@@ -50,7 +50,7 @@ class BotContext extends AppContext
 			return;
 		var dbContext:MySqlContext = this.createDatabaseContext("database");
 		this.set("database", dbContext);
-		dbContext.connect();
+		dbContext.openConnection();
 		neko.db.Manager.cnx = dbContext.getConnection();
 		neko.db.Manager.initialize();
 	}
@@ -60,7 +60,7 @@ class BotContext extends AppContext
 		if (!this.has("database"))
 			return;
 		var dbContext:MySqlContext = this.get("database");
-		dbContext.close();
+		dbContext.closeConnection();
 		neko.db.Manager.cleanup();
 		this.set("database", null);
 	}
