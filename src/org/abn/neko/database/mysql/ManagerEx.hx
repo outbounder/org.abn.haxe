@@ -18,14 +18,10 @@ class ManagerEx <T : Object>  extends neko.db.Manager <T>
 	}
 	
 	// -------------- FIXES ------------------------------
+	
 	override function doDelete( x : T ) 
 	{
-		var s = new StringBuf();
-		s.add("DELETE FROM ");
-		s.add(table_name);
-		s.add(" WHERE ");
-		addKeys(s,x);
-		execute(s.toString());
+		super.doDelete(x);
 		removeFromCache(x);
 	}
 	

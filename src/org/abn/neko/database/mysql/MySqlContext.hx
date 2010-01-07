@@ -5,7 +5,9 @@
 
 package org.abn.neko.database.mysql;
 import neko.db.Connection;
+import neko.vm.Thread;
 import org.abn.neko.AppContext;
+import util.Timer;
 
 class MySqlContext extends AppContext
 {
@@ -16,6 +18,7 @@ class MySqlContext extends AppContext
 	public var socket:String;
 	
 	private var connection:Connection;
+	private var keepConnectionTimer:Timer;
 	
 	public function new(id:String, properties:Hash<Dynamic>) 
 	{
@@ -28,16 +31,37 @@ class MySqlContext extends AppContext
 		this.socket = this.get(id + ".socket");
 	}
 	
-	public function connect():Void
+	public function openConnection():Void
 	{
 		if (this.connection != null)
 			return;
 			
-		this.connection  = neko.db.Mysql.connect({user: this.user, socket: this.socket, port: 3306, pass: this.pass, host: this.host, database: this.database});
+		this.connection  = neko.db.Mysql.connect( { user: this.user, socket: this.socket, port: 3306, pass: this.pass, host: this.host, database: this.database } );
+		this.connection.request("SET NAMES 'utf8'");
+		
+		// ugly hack, TODO make this with mysql options = keep-alive connection
+		this.keepConnectionTimer = new Timer(5 * 60 * 1000);
+		this.keepConnectionTimer.run = keepConnectionAlive;
 	}
 	
-	public function close():Void
+	private function keepConnectionAlive():Void
 	{
+		try
+		{
+			this.connection.request("SET NAMES 'utf8'");
+		}
+		catch (e:Dynamic)
+		{
+			trace(e);
+		}
+	}
+	
+	public function closeConnection():Void
+	{
+		if (this.keepConnectionTimer != null)
+			this.keepConnectionTimer.stop();
+		this.keepConnectionTimer = null;
+		
 		if(this.connection != null)
 			this.connection.close();
 		this.connection = null;
