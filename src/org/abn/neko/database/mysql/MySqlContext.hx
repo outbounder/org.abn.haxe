@@ -5,6 +5,7 @@
 
 package org.abn.neko.database.mysql;
 import neko.db.Connection;
+import neko.db.ResultSet;
 import neko.vm.Thread;
 import org.abn.neko.AppContext;
 import util.Timer;
@@ -37,7 +38,7 @@ class MySqlContext extends AppContext
 			return;
 			
 		this.connection  = neko.db.Mysql.connect( { user: this.user, socket: this.socket, port: 3306, pass: this.pass, host: this.host, database: this.database } );
-		this.connection.request("SET NAMES 'utf8'");
+		var result:ResultSet = this.connection.request("SET NAMES utf8");
 		
 		// ugly hack, TODO make this with mysql options = keep-alive connection
 		this.keepConnectionTimer = new Timer(5 * 60 * 1000);
@@ -48,7 +49,7 @@ class MySqlContext extends AppContext
 	{
 		try
 		{
-			this.connection.request("SET NAMES 'utf8'");
+			var result:ResultSet = this.connection.request("SET NAMES utf8");
 		}
 		catch (e:Dynamic)
 		{

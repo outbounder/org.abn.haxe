@@ -4,6 +4,7 @@ import jabber.JIDUtil;
 import jabber.MessageListener;
 import neko.vm.Thread;
 import org.abn.neko.AppContext;
+import util.Timer;
 import xmpp.Message;
 import xmpp.vcard.Org;
 
@@ -20,7 +21,7 @@ class XMPPContext extends AppContext
 	private var onConnected:Void->Void;
 	private var onDisconnected:Void->Void;
 
-	private var chats:Hash<String->String->Void>;
+	private var requests:Hash<MessageRequest>;
 	
 	public function new(id:String, properties:Hash<Dynamic>)
 	{
@@ -59,7 +60,7 @@ class XMPPContext extends AppContext
 		if(this.onConnected != null)
 			this.onConnected();
 			
-		this.chats = new Hash();
+		this.requests = new Hash();
 		this.messageListener = new MessageListener(this.connection.getStream(), messageHandler, true);
 	}
 	
@@ -80,11 +81,13 @@ class XMPPContext extends AppContext
 			return;
 			
 		var jid:String = JIDUtil.parseBare(msg.from);
-		if (this.chats.exists(jid))
+		if (this.requests.exists(jid))
 		{
-			var responseHandler:String->String->Void = this.chats.get(jid);
-			responseHandler(jid, msg.body.split("&lt;").join("<").split("&gt;").join(">"));
-			this.chats.remove(jid);
+			var msgRequest:MessageRequest = this.requests.get(jid);
+			msgRequest.stopTimeoutTimer();
+			this.requests.remove(jid);
+			
+			msgRequest.onResponse(jid, msg.body.split("&lt;").join("<").split("&gt;").join(">"));
 		}
 		else
 		if (this.onIncomingMessage != null)
@@ -93,14 +96,28 @@ class XMPPContext extends AppContext
 		}
 	}
 	
-	public function sendMessage(recipientJID:String, message:String, ?responseHandler:String->String->Void = null):Void
+	public function sendMessage(recipientJID:String, message:String, ?responseHandler:String->String->Void = null, 
+		?timeoutHandler:String->Void = null, ?timeout:Int = 5000):Void
 	{
-		if (this.chats.exists(recipientJID))
+		recipientJID = JIDUtil.parseBare(recipientJID);
+		
+		if (this.requests.exists(recipientJID))
 			throw "can not send message twice to JID without the response had not been recieved";
-			
-		if(responseHandler != null)
-			this.chats.set(recipientJID, responseHandler);
-			
+		
+		if (responseHandler != null || timeoutHandler != null)
+		{
+			var request:MessageRequest = new MessageRequest(this, recipientJID);
+			request.onResponse = responseHandler;
+			request.onTimeout = timeoutHandler;
+			request.timeout = timeout;
+			request.startTimeoutTimer();
+			this.requests.set(JIDUtil.parseBare(recipientJID), request);
+		}
 		this.connection.sendMessage(recipientJID, message.split("<").join("&lt;").split(">").join("&gt;"));
+	}
+	
+	public function clearMessageRequest(recipientJID:String):Void
+	{
+		this.requests.remove(JIDUtil.parseBare(recipientJID));
 	}
 }
