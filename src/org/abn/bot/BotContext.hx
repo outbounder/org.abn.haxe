@@ -39,10 +39,10 @@ class BotContext extends AppContext
 		asynchBotOperation.handle();
 	}
 	
-	public function createDatabaseConnection(?id:String = "database", ?keepAlive:Bool = false):MySqlContext
+	public function createDatabaseConnection(?id:String = "database"):MySqlContext
 	{
 		var dbContext:MySqlContext = this.createDatabaseContext(id);
-		dbContext.openConnection(keepAlive);
+		dbContext.openConnection();
 		return dbContext;
 	}
 	

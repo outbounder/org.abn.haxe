@@ -14,7 +14,6 @@ class MySqlContext extends AppContext
 	public var socket:String;
 	
 	private var connection:Connection;
-	private var keepConnectionTimer:Timer;
 	
 	public function new(id:String, properties:Hash<Dynamic>) 
 	{
@@ -27,40 +26,17 @@ class MySqlContext extends AppContext
 		this.socket = this.get(id + ".socket");
 	}
 	
-	public function openConnection(keepAlive:Bool):Void
+	public function openConnection():Void
 	{
 		if (this.connection != null)
 			return;
 			
 		this.connection  = neko.db.Mysql.connect( { user: this.user, socket: this.socket, port: 3306, pass: this.pass, host: this.host, database: this.database } );
 		var result:ResultSet = this.connection.request("SET NAMES utf8");
-		
-		if (keepAlive)
-		{
-			// ugly hack, TODO make this with mysql options = keep-alive connection
-			this.keepConnectionTimer = new Timer(5 * 60 * 1000);
-			this.keepConnectionTimer.run = keepConnectionAlive;
-		}
-	}
-	
-	private function keepConnectionAlive():Void
-	{
-		try
-		{
-			var result:ResultSet = this.connection.request("SET NAMES utf8");
-		}
-		catch (e:Dynamic)
-		{
-			trace(e);
-		}
 	}
 	
 	public function closeConnection():Void
 	{
-		if (this.keepConnectionTimer != null)
-			this.keepConnectionTimer.stop();
-		this.keepConnectionTimer = null;
-		
 		if(this.connection != null)
 			this.connection.close();
 		this.connection = null;
