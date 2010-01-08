@@ -58,7 +58,15 @@ class BotContext extends AppContext
 		var operation:BotOperation = this.getOperationFactory().getOperationById(id);
 		if (operation == null)
 			return id;
-		var result:String = operation.execute(params);
+		var result:String = null;
+		try
+		{
+			result = operation.execute(params);
+		}
+		catch (e:Dynamic)
+		{ 
+			result = "exceptionfound";
+		}
 		operation.closeDbConn();
 		return result;
 	}
