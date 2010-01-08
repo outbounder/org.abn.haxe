@@ -39,30 +39,11 @@ class BotContext extends AppContext
 		asynchBotOperation.handle();
 	}
 	
-	public function getDatabase():MySqlContext
+	public function createDatabaseConnection(?id:String = "database", ?keepAlive:Bool = false):MySqlContext
 	{
-		return this.get("database");
-	}
-	
-	public function openDatabase():Void
-	{
-		if (this.has("database"))
-			return;
-		var dbContext:MySqlContext = this.createDatabaseContext("database");
-		this.set("database", dbContext);
-		dbContext.openConnection();
-		neko.db.Manager.cnx = dbContext.getConnection();
-		neko.db.Manager.initialize();
-	}
-	
-	public function closeDatabase():Void
-	{
-		if (!this.has("database"))
-			return;
-		var dbContext:MySqlContext = this.get("database");
-		dbContext.closeConnection();
-		neko.db.Manager.cleanup();
-		this.set("database", null);
+		var dbContext:MySqlContext = this.createDatabaseContext(id);
+		dbContext.openConnection(keepAlive);
+		return dbContext;
 	}
 	
 	public function getOperationFactory():BotOperationFactory
@@ -77,7 +58,9 @@ class BotContext extends AppContext
 		var operation:BotOperation = this.getOperationFactory().getOperationById(id);
 		if (operation == null)
 			return id;
-		return operation.execute(params);
+		var result:String = operation.execute(params);
+		operation.closeDbConn();
+		return result;
 	}
 	
 }

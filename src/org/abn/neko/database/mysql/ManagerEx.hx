@@ -1,35 +1,19 @@
 ﻿package org.abn.neko.database.mysql;
 
 import haxe.xml.Fast;
+import neko.db.Connection;
 import Reflect;
-import neko.db.Object;
 import neko.db.ResultSet;
 import Type;
 
-class ManagerEx <T : Object>  extends neko.db.Manager <T>
+class ManagerEx <T : DataObject>  extends ManagerThreadSafe <T>
 {
-    private var classOriginal:Class<Object>;
 	private var classInfo:Fast;
 	
-	public function new(classval : Class<neko.db.Object>) 
+	public function new(cnx:Connection, classval : Class<DataObject>) 
 	{
-		super(classval);
-		this.classOriginal = classval;
+		super(cnx, classval);
 	}
-	
-	// -------------- FIXES ------------------------------
-	
-	override function doDelete( x : T ) 
-	{
-		super.doDelete(x);
-		removeFromCache(x);
-	}
-	
-	function removeFromCache( x : T ) 
-	{
-		neko.db.Manager.object_cache.remove(makeCacheKey(x));
-	}
-	// ----------------------------------------------------
 	
 	public function updateTable():Void
 	{
@@ -46,20 +30,14 @@ class ManagerEx <T : Object>  extends neko.db.Manager <T>
 		var s = new StringBuf();
 		var fields = new List();
 		var values = new List();
-		var proto : { local_manager : ManagerEx<T> } = this.class_proto.prototype;
-		var protoFields: Array<String> = Reflect.fields(proto);
+		
+		var protoFields: Array<String> = Reflect.fields(this.class_proto);
 		for ( f in this.table_fields ) 
 		{
-			for ( v in protoFields)
-			{
-				if ( v == f ) 
-				{
-					if (f == "id")
-						fields.add(this.quoteField(f) + " INT NOT NULL AUTO_INCREMENT");
-					else
-						fields.add(this.quoteField(f)+ " "+this.getMysqlFieldType(v));
-				}
-			}
+			if (f == "id")
+				fields.add(this.quoteField(f) + " INT NOT NULL AUTO_INCREMENT");
+			else
+				fields.add(this.quoteField(f)+ " "+this.getMysqlFieldType(f));
 		}
 		s.add("CREATE TABLE `");
 		s.add(this.table_name);
@@ -113,15 +91,13 @@ class ManagerEx <T : Object>  extends neko.db.Manager <T>
 		}
 	}
 	
-	
 	private function getFieldType(f:String):String
 	{
 		if (this.classInfo == null)
 		{
-			var xml:Xml = Xml.parse(untyped this.classOriginal.__rtti);
+			var xml:Xml = Xml.parse(untyped this.class_proto.__rtti);
 			this.classInfo = new Fast(xml.firstElement());
 		}
-		
 		var fieldInfo:Fast = this.classInfo.node.resolve(f);
 		if (!fieldInfo.hasNode.c)
 			return null;

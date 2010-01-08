@@ -1,9 +1,4 @@
-﻿/**
- * ...
- * @author outbounder
- */
-
-package org.abn.neko.database.mysql;
+﻿package org.abn.neko.database.mysql;
 import neko.db.Connection;
 import neko.db.ResultSet;
 import neko.vm.Thread;
@@ -32,7 +27,7 @@ class MySqlContext extends AppContext
 		this.socket = this.get(id + ".socket");
 	}
 	
-	public function openConnection():Void
+	public function openConnection(keepAlive:Bool):Void
 	{
 		if (this.connection != null)
 			return;
@@ -40,9 +35,12 @@ class MySqlContext extends AppContext
 		this.connection  = neko.db.Mysql.connect( { user: this.user, socket: this.socket, port: 3306, pass: this.pass, host: this.host, database: this.database } );
 		var result:ResultSet = this.connection.request("SET NAMES utf8");
 		
-		// ugly hack, TODO make this with mysql options = keep-alive connection
-		this.keepConnectionTimer = new Timer(5 * 60 * 1000);
-		this.keepConnectionTimer.run = keepConnectionAlive;
+		if (keepAlive)
+		{
+			// ugly hack, TODO make this with mysql options = keep-alive connection
+			this.keepConnectionTimer = new Timer(5 * 60 * 1000);
+			this.keepConnectionTimer.run = keepConnectionAlive;
+		}
 	}
 	
 	private function keepConnectionAlive():Void
