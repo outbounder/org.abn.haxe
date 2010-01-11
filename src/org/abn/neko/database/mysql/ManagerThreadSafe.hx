@@ -327,6 +327,7 @@ class ManagerThreadSafe<T : DataObject>
 		var r = cnx.request(sql).next();
 		if( r == null )
 			return null;
+		untyped __dollar__objsetproto(r,class_proto.prototype);
 		return r;
 	}
 
@@ -335,7 +336,8 @@ class ManagerThreadSafe<T : DataObject>
 		var me = this;
 		var l = cnx.request(sql).results();
 		var l2 = new List<T>();
-		for( x in l ) {
+		for ( x in l ) {
+			untyped __dollar__objsetproto(x,class_proto.prototype);
 			l2.add(x);
 		}
 		return l2;
