@@ -1,5 +1,6 @@
 ﻿package org.abn.bot.operation;
 
+import hxjson2.JSON;
 import neko.db.Connection;
 import org.abn.bot.BotContext;
 import org.abn.neko.AppContext;
@@ -32,6 +33,14 @@ class BotOperation
 	public function execute(params:Hash<String>):String
 	{
 		return "not implemented";
+	}
+	
+	public function formatResponse(o:Dynamic, ?format:String = null):String
+	{
+		if (format == "json")
+			return JSON.encode(o);
+		else
+			return "<response>" + o + "</response>";
 	}
 	
 }

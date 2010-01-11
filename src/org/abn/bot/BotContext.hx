@@ -39,10 +39,10 @@ class BotContext extends AppContext
 		asynchBotOperation.handle();
 	}
 	
-	public function createDatabaseConnection(?id:String = "database", ?keepAlive:Bool = false):MySqlContext
+	public function createDatabaseConnection(?id:String = "database"):MySqlContext
 	{
 		var dbContext:MySqlContext = this.createDatabaseContext(id);
-		dbContext.openConnection(keepAlive);
+		dbContext.openConnection();
 		return dbContext;
 	}
 	
@@ -58,7 +58,17 @@ class BotContext extends AppContext
 		var operation:BotOperation = this.getOperationFactory().getOperationById(id);
 		if (operation == null)
 			return id;
-		var result:String = operation.execute(params);
+		var result:String = null;
+		try
+		{
+			result = operation.execute(params);
+		}
+		catch (e:Dynamic)
+		{ 
+			trace(e);
+			trace(haxe.Stack.toString(haxe.Stack.exceptionStack()));
+			result = "exceptionfound";
+		}
 		operation.closeDbConn();
 		return result;
 	}
