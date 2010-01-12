@@ -1,4 +1,4 @@
-﻿package org.abn.bot;
+package org.abn.bot;
 
 import org.abn.bot.operation.AsyncBotOperation;
 import org.abn.bot.operation.BotOperation;
