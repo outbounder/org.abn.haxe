@@ -17,7 +17,7 @@ class BotOperation
 		this.connections = new Hash();
 	}
 	
-	public function getDbConn(?id:String):Connection
+	public function getDbConn(?id:String = "database"):Connection
 	{
 		if (this.connections.get(id) == null)
 			this.connections.set(id, this.botContext.createDatabaseConnection(id));
