@@ -9,25 +9,27 @@ import org.abn.neko.database.mysql.MySqlContext;
 class BotOperation 
 {
 	public var botContext:BotContext;
-	private var conn:MySqlContext;
+	private var connections:Hash<MySqlContext>;
 	
 	public function new(botContext:BotContext)
 	{
 		this.botContext = botContext;
+		this.connections = new Hash();
 	}
 	
 	public function getDbConn(?id:String):Connection
 	{
-		if (this.conn == null)
-			this.conn = this.botContext.createDatabaseConnection(id);
+		if (this.connections.get(id) == null)
+			this.connections.set(id, this.botContext.createDatabaseConnection(id));
 			
-		return this.conn.getConnection();
+		return this.connections.get(id).getConnection();
 	}
 	
 	public function closeDbConn():Void
 	{
-		if (this.conn != null)
-			this.conn.closeConnection();
+		for (key in this.connections.keys())
+			this.connections.get(key).closeConnection();
+		this.connections = new Hash();
 	}
 	
 	public function execute(params:Hash<String>):String
