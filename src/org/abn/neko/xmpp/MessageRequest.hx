@@ -41,6 +41,8 @@ class MessageRequest
 	
 	private function handleTimeout():Void
 	{
+		this.stopTimeoutTimer();
+		
 		this.xmppContext.clearMessageRequest(this.to);
 		this.onTimeout(this.to);
 	}
