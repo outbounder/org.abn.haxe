@@ -9,6 +9,8 @@ import org.abn.neko.database.mysql.MySqlContext;
 class BotOperation 
 {
 	public var botContext:BotContext;
+	public var requestContext:Dynamic;
+	
 	private var connections:Hash<MySqlContext>;
 	
 	public function new(botContext:BotContext)

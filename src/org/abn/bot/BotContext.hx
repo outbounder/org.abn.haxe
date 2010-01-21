@@ -53,11 +53,13 @@ class BotContext extends AppContext
 		return this.get("operationFactory");
 	}
 	
-	public function executeOperation(id:String, params:Hash<String>):String
+	public function executeOperation(id:String, params:Hash<String>, ?requestContext:Dynamic = null):String
 	{
 		var operation:BotOperation = this.getOperationFactory().getOperationById(id);
 		if (operation == null)
 			return id;
+			
+		operation.requestContext = requestContext;
 		var result:String = null;
 		try
 		{
